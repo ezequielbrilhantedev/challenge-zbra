@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Validador de Senhas
 
-## Getting Started
+Este é um projeto Next.js que implementa um formulário para validar senhas. O formulário verifica se a senha está dentro de um intervalo específico, se contém dígitos adjacentes iguais e se os dígitos nunca diminuem em valor.
 
-First, run the development server:
+# Tecnologias Utilizadas
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- [Next.js](https://nextjs.org/)
+- [React Hook Form](https://react-hook-form.com/) e [Zod](https://github.com/colinhacks/zod) para validação e controle do formulário.
+- [Cypress](https://www.cypress.io/) para testes end-to-end
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Funcionalidades
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Validação de formulário com React Hook Form e Zod.
+- Mensagens de erro específicas para campos inválidos.
+- Envio de dados para um endpoint de API simulado.
+- Exibição de mensagem de sucesso ou erro após o envio do formulário.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## Pré-requisitos
 
-## Learn More
+Antes de começar, certifique-se de ter o Node.js instalado. Recomenda-se utilizar a versão LTS.
 
-To learn more about Next.js, take a look at the following resources:
+## Instalação
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Clone o repositório: `git clone https://github.com/ezequielbrilhantedev/challenge-zbra`
+2. cd challenge-zbra
+3. Instale as dependências: `npm install`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+## Uso
 
-## Deploy on Vercel
+Para iniciar o servidor de desenvolvimento:
+`npm run dev`
+Abra http://localhost:3000 no seu navegador para ver a aplicação em execução.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Testes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+Este projeto utiliza Cypress para testes end-to-end.
+**Executar Cypress**
+
+1.  Abra o Cypress:
+    `npm run cy:open`
+2.  No Cypress Test Runner, selecione o arquivo de teste `formSubmit.cy.ts` para executar os testes.
+
+# Contato
+
+Para mais informações, entre em contato pelo email: ezequielbrilhante.dev@gmail.com ou ezequielrb7@gmai.com
+
+# Telas
+
+## Desktop
+
+![Tela em tamanho desktop](/public/image/desktop-image.png)
+
+## Mobile
+
+![Tela em tamanho mobile](/public/image/mobile-image.png)

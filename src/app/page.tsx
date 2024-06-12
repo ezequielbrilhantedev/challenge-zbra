@@ -1,113 +1,163 @@
-import Image from "next/image";
+'use client';
+
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { ClipLoader } from 'react-spinners';
+import { z } from 'zod';
+
+const formSchema = z.object({
+  name: z.string().min(1, 'O nome é obrigatório'),
+  email: z.string().email('Email inválido'),
+  password: z
+    .string()
+    .min(6, 'A senha deve ser um número de 6 dígitos.')
+    .max(6, 'A senha deve ser no máximo 6 dígitos.')
+    .refine((password) => {
+      const isInRange =
+        parseInt(password) >= 184759 &&
+        parseInt(password) <= 856920;
+      const hasAdjacentDuplicates = /(\d)\1/.test(password);
+      const neverDecreases = password
+        .split('')
+        .every(
+          (digit, index, array) =>
+            index === 0 || digit >= array[index - 1]
+        );
+      return (
+        isInRange && hasAdjacentDuplicates && neverDecreases
+      );
+    }, 'A senha deve estar entre 184759-856920, conter dígitos adjacentes iguais e nunca diminuir em valor.'),
+});
+
+type createUserFormData = z.infer<typeof formSchema>;
 
 export default function Home() {
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+    reset,
+  } = useForm<createUserFormData>({
+    resolver: zodResolver(formSchema),
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [formDisabled, setFormDisabled] = useState(false);
+
+  const formValues = watch();
+
+  const allFieldsFilled = Object.values(formValues).every(
+    (field) => field !== ''
+  );
+  const hasValidationErrors =
+    Object.keys(errors).length > 0;
+
+  const isSubmitDisabled =
+    !allFieldsFilled || hasValidationErrors || formDisabled;
+
+  const onSubmit = async (data: createUserFormData) => {
+    setFormDisabled(true);
+    setLoading(true);
+    setMessage('');
+    try {
+      const response = await fetch('/api/loginFetch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao enviar requisição');
+      }
+
+      setMessage('Resultado enviado com sucesso!');
+    } catch (error) {
+      console.error(error);
+      setMessage(
+        'Falha ao enviar reusltado. Tente novamente.'
+      );
+    } finally {
+      setLoading(false);
+      reset();
+      setFormDisabled(false);
+    }
+  };
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
+    <div className="h-screen lg:h-[40rem] sm:px-12 sm:py-20 flex justify-center">
+      <div className="bg-white sm:border p-12 sm:max-w-[51rem] w-full grid gap-4">
+        <h1 className="text-4xl text-center">
+          Valide sua senha
+        </h1>
+        <form>
+          <div className="grid gap-4">
+            <div>
+              <input
+                type="text"
+                placeholder="Nome"
+                className="border border-black bg-white h-8 sm:w-[45rem] w-full rounded pl-4"
+                {...register('name')}
+              />
+              {errors.name && (
+                <span className="text-red-700">
+                  {errors.name.message}
+                </span>
+              )}
+            </div>
+            <div>
+              <input
+                type="email"
+                placeholder="Email"
+                className="border border-black bg-white h-8 sm:w-[45rem] w-full rounded pl-4"
+                {...register('email')}
+              />
+              {errors.email && (
+                <span className="text-red-700">
+                  {errors.email.message}
+                </span>
+              )}
+            </div>
+            <div>
+              <input
+                type="password"
+                placeholder="Senha"
+                className="border border-black bg-white h-8 sm:w-[45rem] w-full rounded pl-4 "
+                {...register('password')}
+              />
+              {errors.password && (
+                <span className="text-red-700">
+                  {errors.password.message}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex sm:justify-end justify-center items-center gap-8 sm:mt-8 mt-60">
+            {isSubmitDisabled ? '' : <span>{message}</span>}
+            <button
+              onClick={handleSubmit(onSubmit)}
+              className={`border rounded p-3 sm:w-32 w-56 bg-teal-400 text-slate-50 font-medium text-lg
+              ${
+                isSubmitDisabled
+                  ? 'cursor-not-allowed bg-gray-500'
+                  : 'cursor-pointer'
+              }`}
+              disabled={isSubmitDisabled}
+            >
+              {loading ? (
+                <ClipLoader color="#fff" />
+              ) : (
+                'Enviar'
+              )}
+            </button>
+          </div>
+        </form>
       </div>
-
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+    </div>
   );
 }
